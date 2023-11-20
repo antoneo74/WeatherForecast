@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
 using System.Text.Json;
@@ -7,52 +6,48 @@ using static System.Net.WebRequestMethods;
 
 namespace WeatherForecast.Controllers;
 
+/// <summary>
+/// WeatherForecastController
+/// </summary>
 [ApiController]
-[Route("[controller]")]
+[Route("api/[controller]")]
 public class WeatherForecastController : ControllerBase
 {
-    //private static readonly string[] Summaries = new[]
-    //{
-    //    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    //};
-
     private readonly ILogger<WeatherForecastController> _logger;
+
+    /// <summary>
+    /// HttpClient
+    /// </summary>
     public HttpClient Client { get; }
 
+    /// <summary>
+    /// WeatherForecastController Constructor
+    /// </summary>
+    /// <param name="logger"></param>
     public WeatherForecastController(ILogger<WeatherForecastController> logger)
     {
         _logger = logger;
-        Client=new HttpClient();
+        Client = new HttpClient();
     }
 
-    ///// <summary>
-    ///// Return weatherForecast for point with current coordinates
-    ///// </summary>
-    ///// <param>
-    ///// 
-    ///// </param>
-    ///// <returns>
-    ///// IEnumerable<WeatherForecast>
-    ///// </returns>
-    ///// <response code="200">Success</response>
-    ///// <response code="400">If error occured</response>
-    ///// 
-
-
     /// <summary>
-    /// This is method summary I want displayed
+    /// Get weatherForecast for point with current coordinates
     /// </summary>
-    /// <param name="guid">guid as parameter</param>
-    /// <param name="page_number">Page number - defaults to 0</param>
-    /// <returns>List of objects returned</returns>
-    [HttpGet]
-    [Description("The image associated with the control")]
+    /// <param>
+    /// latitude and longitude
+    /// </param>
+    /// <returns>
+    /// Object our model
+    /// </returns>
+    /// <response code="200">The request succeeded</response>
+    /// <response code="400">Bad request</response>
+    [HttpGet("{latitude}, {longitude}")]
+    [Description("Get weatherForecast for point with current coordinates")]
     [ProducesResponseType(statusCode: 200)]
     [ProducesResponseType(statusCode: 400)]
     public async Task<ActionResult> GetAsync(string latitude, string longitude)
     {
         string key = "b03a2cfad336d11bd9140ffd92074504";
-
 
         string request = $@"https://api.openweathermap.org/data/2.5/weather?lat={latitude}&lon={longitude}&appid={key}";
         
@@ -60,20 +55,20 @@ public class WeatherForecastController : ControllerBase
 
         var result = await response.Content.ReadAsStringAsync();
         
-        Rootobject ggg = new Rootobject();
+        Rootobject? weatherObject = new();
 
         if (response.StatusCode != System.Net.HttpStatusCode.OK)
         {
             return BadRequest();
         }
         try
-        {  
-            ggg = JsonSerializer.Deserialize<Rootobject>(result);
+        {
+            weatherObject = JsonSerializer.Deserialize<Rootobject>(result);
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex.Message);
         }
-        return Ok(ggg);
+        return Ok(weatherObject);
     }
 }

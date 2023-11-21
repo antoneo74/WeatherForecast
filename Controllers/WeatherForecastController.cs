@@ -10,10 +10,12 @@ namespace WeatherForecast.Controllers;
 /// WeatherForecastController
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+//[Route("[controller]")]
 public class WeatherForecastController : ControllerBase
 {
     private readonly ILogger<WeatherForecastController> _logger;
+
+    private readonly string _key = "b03a2cfad336d11bd9140ffd92074504";
 
     /// <summary>
     /// HttpClient
@@ -47,14 +49,53 @@ public class WeatherForecastController : ControllerBase
     [ProducesResponseType(statusCode: 400)]
     public async Task<ActionResult> GetAsync(string latitude, string longitude)
     {
-        string key = "b03a2cfad336d11bd9140ffd92074504";
-
-        string request = $@"https://api.openweathermap.org/data/2.5/weather?lat={latitude}&lon={longitude}&appid={key}";
+        string request = $@"https://api.openweathermap.org/data/2.5/weather?lat={latitude}&lon={longitude}&appid={_key}";
         
         var response = await Client.GetAsync(request);
 
         var result = await response.Content.ReadAsStringAsync();
         
+        Rootobject? weatherObject = new();
+
+        if (response.StatusCode != System.Net.HttpStatusCode.OK)
+        {
+            return BadRequest();
+        }
+        try
+        {
+            weatherObject = JsonSerializer.Deserialize<Rootobject>(result);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        return Ok(weatherObject);
+    }
+
+    /// <summary>
+    /// Get weatherForecast for the required city
+    /// </summary>
+    /// <param>
+    /// City name
+    /// </param>
+    /// <returns>
+    /// Object our model
+    /// </returns>
+    /// <response code="200">The request succeeded</response>
+    /// <response code="400">Bad request</response>
+    [HttpGet]
+    [Route("/[controller]/{city}")]
+    [Description("Get weatherForecast for the required city")]
+    [ProducesResponseType(statusCode: 200)]
+    [ProducesResponseType(statusCode: 400)]
+    public async Task<ActionResult> GetAsync(string city)
+    {
+        string request = $@"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={_key}";
+
+        var response = await Client.GetAsync(request);
+
+        var result = await response.Content.ReadAsStringAsync();
+
         Rootobject? weatherObject = new();
 
         if (response.StatusCode != System.Net.HttpStatusCode.OK)

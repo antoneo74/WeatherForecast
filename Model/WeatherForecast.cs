@@ -29,7 +29,7 @@ namespace WeatherForecast.Model
         /// Name parameter
         /// </summary>
         [JsonPropertyName("name")]
-        public string? Name { get; set; }        
+        public string? Name { get; set; }
     }
 
     /// <summary>
@@ -37,11 +37,18 @@ namespace WeatherForecast.Model
     /// </summary>
     public class Main
     {
+        private double _temp;
+
         /// <summary>
         /// Temperature parameter
         /// </summary>
         [JsonPropertyName("temp")]
-        public float? Temp { get; set; }
+        public double? Temp
+        {
+            get => _temp;
+
+            set => _temp = Math.Round((double)(value - 273.15), 1);
+        }
 
         /// <summary>
         /// Pressure parameter
@@ -53,7 +60,7 @@ namespace WeatherForecast.Model
         /// Humidity parameter
         /// </summary>
         [JsonPropertyName("humidity")]
-        public int? Humidity { get; set; }        
+        public int? Humidity { get; set; }
     }
 
     /// <summary>

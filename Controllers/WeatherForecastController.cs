@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using rush01.Services;
 using System.ComponentModel;
-using System.Text.Json;
-using WeatherForecast.Model;
-using static System.Net.WebRequestMethods;
 
 namespace WeatherForecast.Controllers;
 
@@ -10,26 +8,20 @@ namespace WeatherForecast.Controllers;
 /// WeatherForecastController
 /// </summary>
 [ApiController]
-//[Route("[controller]")]
+[Route("[controller]")]
 public class WeatherForecastController : ControllerBase
 {
-    private readonly ILogger<WeatherForecastController> _logger;
-
-    private readonly string _key = "b03a2cfad336d11bd9140ffd92074504";
-
-    /// <summary>
-    /// HttpClient
-    /// </summary>
-    public HttpClient Client { get; }
+    private readonly IWeatherClient _weatherClient;
 
     /// <summary>
     /// WeatherForecastController Constructor
     /// </summary>
-    /// <param name="logger"></param>
-    public WeatherForecastController(ILogger<WeatherForecastController> logger)
-    {
-        _logger = logger;
-        Client = new HttpClient();
+    /// <param name="client">
+    /// WeatherClient object 
+    /// </param>
+    public WeatherForecastController(IWeatherClient client)
+    {       
+        _weatherClient = client;
     }
 
     /// <summary>
@@ -47,30 +39,8 @@ public class WeatherForecastController : ControllerBase
     [Description("Get weatherForecast for point with current coordinates")]
     [ProducesResponseType(statusCode: 200)]
     [ProducesResponseType(statusCode: 400)]
-    public async Task<ActionResult> GetAsync(string latitude, string longitude)
-    {
-        string request = $@"https://api.openweathermap.org/data/2.5/weather?lat={latitude}&lon={longitude}&appid={_key}";
-        
-        var response = await Client.GetAsync(request);
-
-        var result = await response.Content.ReadAsStringAsync();
-        
-        Rootobject? weatherObject = new();
-
-        if (response.StatusCode != System.Net.HttpStatusCode.OK)
-        {
-            return BadRequest();
-        }
-        try
-        {
-            weatherObject = JsonSerializer.Deserialize<Rootobject>(result);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.Message);
-        }
-        return Ok(weatherObject);
-    }
+    public Task<ActionResult> Get(string latitude, string longitude) =>
+       _weatherClient.GetAsync(latitude, longitude);
 
     /// <summary>
     /// Get weatherForecast for the required city
@@ -88,28 +58,6 @@ public class WeatherForecastController : ControllerBase
     [Description("Get weatherForecast for the required city")]
     [ProducesResponseType(statusCode: 200)]
     [ProducesResponseType(statusCode: 400)]
-    public async Task<ActionResult> GetAsync(string city)
-    {
-        string request = $@"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={_key}";
-
-        var response = await Client.GetAsync(request);
-
-        var result = await response.Content.ReadAsStringAsync();
-
-        Rootobject? weatherObject = new();
-
-        if (response.StatusCode != System.Net.HttpStatusCode.OK)
-        {
-            return BadRequest();
-        }
-        try
-        {
-            weatherObject = JsonSerializer.Deserialize<Rootobject>(result);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.Message);
-        }
-        return Ok(weatherObject);
-    }
+    public Task<ActionResult> Get(string city) =>
+      _weatherClient.GetAsync(city);
 }

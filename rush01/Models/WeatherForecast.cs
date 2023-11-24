@@ -31,7 +31,7 @@ namespace rush01.Models
             /// Name parameter
             /// </summary>
             [JsonPropertyName("name")]
-            public string? Name { get; set; }
+            public string? Name { get; set; } = default;
         }
 
         /// <summary>

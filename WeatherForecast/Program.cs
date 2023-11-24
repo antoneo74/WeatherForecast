@@ -4,10 +4,10 @@ using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//Берем конфигурацию из файла при старте приложения
+//Set configuration from file
 builder.Configuration.AddJsonFile("appsettings.json");
 
-// устанавливаем объект ServiceSettings по настройкам из конфигурации
+// set data to ServiceSettings object from configuration
 builder.Services.Configure<ServiceSettings>(builder.Configuration);
 
 // Add services to the container.
@@ -18,6 +18,8 @@ builder.Services.AddEndpointsApiExplorer();
 
 //DI - WeatherClient dependency is registered 
 builder.Services.AddScoped<IWeatherClient, WeatherClient>();
+
+builder.Services.AddMemoryCache();
 
 builder.Services.AddSwaggerGen(
     options =>

@@ -3,6 +3,7 @@ using static rush01.Models.WeatherForecast;
 using System.ComponentModel;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace rush01.Services
 {
@@ -10,16 +11,20 @@ namespace rush01.Services
     {
         private readonly string _key;
 
+        private IMemoryCache _cache;
+
         /// <summary>
         /// HttpClient
         /// </summary>
         public HttpClient Client { get; }
 
-        public WeatherClient(IOptions<ServiceSettings> options)
+        public WeatherClient(IOptions<ServiceSettings> options, IMemoryCache memoryCache)
         {
             Client = new HttpClient();
 
             _key = options.Value.ApiKey;
+
+            _cache = memoryCache;
         }
 
         /// <summary>
@@ -73,13 +78,25 @@ namespace rush01.Services
         /// </returns>
         /// <response code="200">The request succeeded</response>
         /// <response code="400">Bad request</response>
+        /// <response code="404">Not found request</response>
         [HttpGet]
-        [Route("/[controller]/{city}")]
+        //[Route("/[controller]/{city?}")]
         [Description("Get weatherForecast for the required city")]
         [ProducesResponseType(statusCode: 200)]
         [ProducesResponseType(statusCode: 400)]
-        public async Task<ActionResult> GetAsync(string city)
+        [ProducesResponseType(statusCode: 404)]
+        public async Task<ActionResult> GetAsync(string? city)
         {
+            if (city == null)
+            {
+                _cache.TryGetValue("name", out string defaultCity);
+                if (defaultCity == null)
+                {
+                    return new NotFoundResult();
+                }
+                city = defaultCity;
+            }
+
             string request = $@"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={_key}";
 
             var response = await Client.GetAsync(request);
@@ -102,6 +119,36 @@ namespace rush01.Services
             }
             return new OkObjectResult(weatherObject);
         }
+
+        /// <summary>
+        /// Set default city name
+        /// </summary>
+        /// <param>
+        /// City name
+        /// </param>
+        /// <returns>
+        /// Status code
+        /// </returns>
+        /// <response code="200">The request succeeded</response>
+        /// <response code="400">Bad request</response>
+        [HttpPost]
+        [Description("Set default city name")]
+        [ProducesResponseType(statusCode: 200)]
+        [ProducesResponseType(statusCode: 400)]
+        public ActionResult Post(string defaultCityName)
+        {
+            try
+            {
+                _cache?.Remove("name");
+
+                _cache.Set("name", defaultCityName);
+
+                return new OkResult();
+            }
+            catch (Exception)
+            {
+                return new BadRequestResult();
+            }
+        }
     }
 }
-

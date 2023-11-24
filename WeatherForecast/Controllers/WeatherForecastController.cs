@@ -20,7 +20,7 @@ public class WeatherForecastController : ControllerBase
     /// WeatherClient object 
     /// </param>
     public WeatherForecastController(IWeatherClient client)
-    {       
+    {
         _weatherClient = client;
     }
 
@@ -53,11 +53,32 @@ public class WeatherForecastController : ControllerBase
     /// </returns>
     /// <response code="200">The request succeeded</response>
     /// <response code="400">Bad request</response>
+    /// <response code="404">Not found request</response>
     [HttpGet]
-    [Route("/[controller]/{city}")]
+    //[Route("/[controller]/{city?}")]
     [Description("Get weatherForecast for the required city")]
     [ProducesResponseType(statusCode: 200)]
     [ProducesResponseType(statusCode: 400)]
-    public Task<ActionResult> Get(string city) =>
+    [ProducesResponseType(statusCode: 404)]
+    public Task<ActionResult> Get(string? city) =>
       _weatherClient.GetAsync(city);
+
+
+    /// <summary>
+    /// Set default city name
+    /// </summary>
+    /// <param>
+    /// City name
+    /// </param>
+    /// <returns>
+    /// Status code
+    /// </returns>
+    /// <response code="200">The request succeeded</response>
+    /// <response code="400">Bad request</response>
+    [HttpPost]
+    [Description("Set default city name")]
+    [ProducesResponseType(statusCode: 200)]
+    [ProducesResponseType(statusCode: 400)]
+    public ActionResult Post(string defaultCityName) =>
+      _weatherClient.Post(defaultCityName);
 }
